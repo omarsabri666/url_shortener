@@ -8,13 +8,14 @@ import (
 
 func NewRedisClient() *redis.Client {
 	LoadEnv()
-	redisHost := os.Getenv("REDIS_HOST")
-	redisPort := os.Getenv("REDIS_PORT")
+	// redisHost := os.Getenv("REDIS_HOST")
+	// redisPort := os.Getenv("REDIS_PORT")
 	redisPassword := os.Getenv("REDIS_PASSWORD")
-	addr := redisHost + ":" + redisPort
+	redisUrl := os.Getenv("REDIS_URL")
+	// addr := redisHost + ":" + redisPort
 
 	return redis.NewClient(&redis.Options{
-		Addr:     addr,
+		Addr:     redisUrl,
 		Password: redisPassword, // add if you set one
 		DB:       0,
 		
