@@ -94,14 +94,12 @@ counterTable := `CREATE TABLE IF NOT EXISTS counters (
         id BIGINT NOT NULL
 
 )`
- refreshTokenTable := `CREATE TABLE IF NOT EXISTS tokens (
-    token VARCHAR(512) PRIMARY KEY,
-    user_id CHAR(36) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_user_token FOREIGN KEY (user_id) REFERENCES users(id)
-);`
+tokenTable := "DROP TABLE IF EXISTS tokens"
 
+
+   if _, err := db.Exec(tokenTable); err != nil {
+        log.Fatal("Failed to drop tokens table:", err)
+    }
  
 
     
@@ -109,12 +107,25 @@ counterTable := `CREATE TABLE IF NOT EXISTS counters (
     if _, err := db.Exec(urlsTable); err != nil {
         log.Fatal("Failed to create urls table:", err)
     }
-    if _, err := db.Exec(counterTable); err != nil {
-        log.Fatal("Failed to create counters table:", err)
+   
+  if _, err := db.Exec(counterTable); err != nil {
+    log.Fatal("Failed to create counters table:", err)
+}
+
+// Ensure a row exists
+var count int
+err = db.QueryRow("SELECT COUNT(*) FROM counters").Scan(&count)
+if err != nil {
+    log.Fatal("Failed to check counters table:", err)
+}
+
+if count == 0 {
+    _, err := db.Exec("INSERT INTO counters (id) VALUES (1)")
+    if err != nil {
+        log.Fatal("Failed to insert initial counter row:", err)
     }
-    if _, err := db.Exec(refreshTokenTable); err != nil {
-        log.Fatal("Failed to create refresh tokens table:", err)
-    }
+    log.Println("Inserted initial counter row")
+}
 
     fmt.Println("Connected to DB and tables ensured.")
     return db
