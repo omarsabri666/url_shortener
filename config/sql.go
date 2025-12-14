@@ -18,9 +18,9 @@ func LoadEnv() {
 func Connect() *sql.DB {
 	LoadEnv()
 
-user := os.Getenv("DB_USER")
+user := os.Getenv("MYSQLUSER")
 password := os.Getenv("MYSQL_ROOT_PASSWORD")
-host := os.Getenv("DB_HOST")
+host := os.Getenv("MYSQLHOST")
 dbname := os.Getenv("MYSQL_DATABASE")
 dbPort := os.Getenv("DB_PORT") // <-- read DB_PORT from .env
 log.Printf("DEBUG dbPort : %v" , dbPort)
