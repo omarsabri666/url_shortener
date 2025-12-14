@@ -45,6 +45,7 @@ dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, d
 // dbName := hostParts[1]
 
 // dsn := userPass + "@tcp(" + host + ")/" + dbName
+log.Println(dsn)
 
 db, err := sql.Open("mysql", dsn)
 // Open connection
