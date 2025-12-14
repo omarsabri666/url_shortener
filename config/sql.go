@@ -30,10 +30,33 @@ func Connect() *sql.DB {
 // dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, dbPort, dbname)
 // log.Println(dsn)
 
-mysqlUrl := os.Getenv("MYSQL_URL") // from Railway
+// mysqlUrl := os.Getenv("MYSQL_URL") // from Railway
+mysqlUrl := os.Getenv("MYSQL_URL")
+// Parse: mysql://user:pass@host:port/dbname
 mysqlUrl = strings.TrimPrefix(mysqlUrl, "mysql://")
 
-db, err := sql.Open("mysql", mysqlUrl+"?parseTime=true")
+// Split into credentials+host and database
+lastSlash := strings.LastIndex(mysqlUrl, "/")
+if lastSlash == -1 {
+    log.Fatal("Invalid MYSQL_URL: no database name found")
+}
+
+hostPart := mysqlUrl[:lastSlash]  // root:pass@host:port
+dbName := mysqlUrl[lastSlash+1:]   // railway
+
+// Format: user:pass@tcp(host:port)/dbname?parseTime=true
+dsn := hostPart + "/" + dbName + "?parseTime=true"
+
+// Or use tcp() wrapper (more explicit):
+// dsn := strings.Replace(hostPart, "@", "@tcp(", 1) + ")/" + dbName + "?parseTime=true"
+
+db, err := sql.Open("mysql", dsn)
+log.Println(mysqlUrl)
+mysqlUrl = strings.TrimPrefix(mysqlUrl, "mysql://")
+log.Println(mysqlUrl)
+
+
+// db, err := sql.Open("mysql", mysqlUrl+"?parseTime=true")
 // Open connection
 // db, err := sql.Open("mysql", mysqlUrl)
 if err != nil {
