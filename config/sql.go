@@ -22,7 +22,7 @@ user := os.Getenv("MYSQLUSER")
 password := os.Getenv("MYSQL_ROOT_PASSWORD")
 host := os.Getenv("MYSQLHOST")
 dbname := os.Getenv("MYSQL_DATABASE")
-dbPort := os.Getenv("DB_PORT") // <-- read DB_PORT from .env
+dbPort := os.Getenv("MYSQLPORT") // <-- read DB_PORT from .env
 log.Printf("DEBUG dbPort : %v" , dbPort)
 log.Printf("DEBUG dbname : %v" , dbname)
 log.Printf("DEBUG host : %v" , host)
