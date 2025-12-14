@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	errs "github.com/omarsabri666/url_shorter/err"
@@ -58,7 +59,8 @@ func (u *UserHandler) Login(c *gin.Context) {
 		// c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	c.SetCookie("refresh_token", UserToken.RefreshToken, 3600 * 24 * 30, "/", "localhost", false, true)
+domaim :=	os.Getenv("DOMAIN")
+	c.SetCookie("refresh_token", UserToken.RefreshToken, 3600 * 24 * 30, "/", domaim, false, true)
 	c.JSON(200, gin.H{"message": "Login successful", "access_token": UserToken.AccessToken,})
 
 }
@@ -83,7 +85,9 @@ err =	u.service.Logout(tStruct,c.Request.Context())
 		// c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}	
-	    c.SetCookie("refresh_token", "", -1, "/", "localhost", true, true)
+	domaim :=	os.Getenv("DOMAIN")
+
+	    c.SetCookie("refresh_token", "", -1, "/", domaim, true, true)
 
 	c.JSON(200, gin.H{"message": "Logout successful"})
 
