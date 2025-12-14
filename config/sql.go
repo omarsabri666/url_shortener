@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -29,9 +30,24 @@ func Connect() *sql.DB {
 // dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, dbPort, dbname)
 // log.Println(dsn)
 
-mysqlUrl := os.Getenv("MYSQL_URL") // from Railway
+// mysqlUrl := os.Getenv("MYSQL_URL") // from Railway
 
-db, err := sql.Open("mysql", mysqlUrl)
+// db, err := sql.Open("mysql", mysqlUrl)
+mysqlUrl := os.Getenv("MYSQL_URL")
+mysqlUrl = strings.Trim(mysqlUrl, "\"") // remove quotes
+mysqlUrl = strings.TrimPrefix(mysqlUrl, "mysql://")
+
+parts := strings.SplitN(mysqlUrl, "@", 2)
+userPass := parts[0]
+hostDb := parts[1]
+
+hostParts := strings.SplitN(hostDb, "/", 2)
+host := hostParts[0]
+dbName := hostParts[1]
+
+dsn := userPass + "@tcp(" + host + ")/" + dbName
+
+db, err := sql.Open("mysql", dsn)
 // Open connection
 // db, err := sql.Open("mysql", mysqlUrl)
 if err != nil {
