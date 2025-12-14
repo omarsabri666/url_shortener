@@ -18,17 +18,19 @@ func LoadEnv() {
 func Connect() *sql.DB {
 	LoadEnv()
 
-user := os.Getenv("DB_USER")
-password := os.Getenv("MYSQL_ROOT_PASSWORD")
-host := os.Getenv("DB_HOST")
-dbname := os.Getenv("MYSQL_DATABASE")
-dbPort := os.Getenv("DB_PORT") // <-- read DB_PORT from .env
+// user := os.Getenv("DB_USER")
+// password := os.Getenv("MYSQL_ROOT_PASSWORD")
+// host := os.Getenv("DB_HOST")
+// dbname := os.Getenv("MYSQL_DATABASE")
+// dbPort := os.Getenv("DB_PORT") // <-- read DB_PORT from .env
+mysqlUrl := os.Getenv("MYSQL_URL")
 
-// Data Source Name with port
-dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, dbPort, dbname)
+// // Data Source Name with port
+// dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, dbPort, dbname)
+// log.Println(dsn)
 
 // Open connection
-db, err := sql.Open("mysql", dsn)
+db, err := sql.Open("mysql", mysqlUrl)
 if err != nil {
     log.Fatal("Failed to connect to DB:", err)
 }
