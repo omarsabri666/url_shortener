@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -23,14 +24,18 @@ func Connect() *sql.DB {
 // host := os.Getenv("DB_HOST")
 // dbname := os.Getenv("MYSQL_DATABASE")
 // dbPort := os.Getenv("DB_PORT") // <-- read DB_PORT from .env
-mysqlUrl := os.Getenv("MYSQL_URL")
+// mysqlUrl := os.Getenv("MYSQL_URL")
 
 // // Data Source Name with port
 // dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, dbPort, dbname)
 // log.Println(dsn)
 
+mysqlUrl := os.Getenv("MYSQL_URL") // from Railway
+mysqlUrl = strings.TrimPrefix(mysqlUrl, "mysql://")
+
+db, err := sql.Open("mysql", mysqlUrl+"?parseTime=true")
 // Open connection
-db, err := sql.Open("mysql", mysqlUrl)
+// db, err := sql.Open("mysql", mysqlUrl)
 if err != nil {
     log.Fatal("Failed to connect to DB:", err)
 }
