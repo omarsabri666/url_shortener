@@ -108,9 +108,7 @@ POST /auth/signup
 
 ```json
 {
- {
   "message": "Signup successful"
-}
 }
 ```
 
@@ -151,9 +149,7 @@ Authorization: Bearer <access_token>
 
 ```json
 {
-{
   "token": "JWT TOKEN"
-}
 }
 ```
 
@@ -169,15 +165,10 @@ Authorization: Bearer <access_token>
 
 ```json
 {
-{
   "message": "Logout successful"
 }
-}
+```
 
 ## 🌍 Deployment
 
 The application is deployed on **Railway** with managed MySQL and Redis services.
-
----
-
-```
