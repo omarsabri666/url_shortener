@@ -9,8 +9,6 @@ import (
 	"github.com/omarsabri666/url_shorter/global"
 )
 
-
-
 type TokenType string
 
 const (
@@ -18,15 +16,15 @@ const (
 	RefreshToken TokenType = "refresh"
 )
 
-func GenerateToken(id string , tokenType TokenType ) (string, error) {
+func GenerateToken(id string, tokenType TokenType) (string, error) {
 	now := time.Now()
-var (
+	var (
 		expiration time.Duration
 		secret     string
 	)
-		switch tokenType {
+	switch tokenType {
 	case AccessToken:
-		expiration =  global.AccessTokenExp //  1 hour access token go crazy users 
+		expiration = global.AccessTokenExp //  1 hour access token go crazy users
 		secret = os.Getenv("ACCESS_TOKEN")
 	case RefreshToken:
 		expiration = global.RefreshTokenExp // 30 days for refresh tokens
@@ -39,7 +37,7 @@ var (
 	if secret == "" {
 		return "", jwt.ErrInvalidKey
 	}
-		token := jwt.NewWithClaims(
+	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"sub":  id,
@@ -48,36 +46,26 @@ var (
 			"type": string(tokenType), // Helps identify token type during validation
 		},
 	)
-		return token.SignedString([]byte(secret))
+	return token.SignedString([]byte(secret))
 
 }
-func VerifyRefreshToken(refreshToken string) (string,error)  {
+func VerifyRefreshToken(refreshToken string) (string, error) {
 	tokenKey := os.Getenv("REFRESH_TOKEN")
-	        claims := jwt.MapClaims{}
+	claims := jwt.MapClaims{}
 
-		token, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte(tokenKey), nil
-		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
-		   if err != nil || !token.Valid {
+	token, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(tokenKey), nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+	if err != nil || !token.Valid {
 
-          
+		return "", err
+	}
+	userID, ok := claims["sub"].(string)
+	if !ok || userID == "" {
 
+		return "", errors.New("invalid token claims")
+	}
 
-
-
-        
-            return "",err
-        }
-    userID, ok := claims["sub"].(string)
-        if !ok || userID == "" {
-         
-            return "",errors.New("invalid token claims")
-        }	
-		
-		
-		return  userID,nil
-
-
+	return userID, nil
 
 }
-

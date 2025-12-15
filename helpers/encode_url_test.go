@@ -5,18 +5,7 @@ import (
 	"testing"
 )
 
-// func TestEncodeBase62_success(t *testing.T) {
-// 	num := 1
-// 	expected := "1"
-// 	result := EncodeBase62(int64(num))
-// 	if result != expected {
-// 		t.Errorf("Expected %s, got %s", expected, result)
-// 	}
-
-// }
-
-
- func TestEncodeBase62_success(t *testing.T) {
+func TestEncodeBase62_success(t *testing.T) {
 	tests := []struct {
 		input    int64
 		expected string
@@ -28,7 +17,7 @@ import (
 		{12345, "3d7"},
 	}
 
-for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(fmt.Sprintf("input=%d", tt.input), func(t *testing.T) {
 			t.Parallel()
 			result := EncodeBase62(tt.input)
@@ -38,5 +27,4 @@ for _, tt := range tests {
 		})
 	}
 
-
- }
+}

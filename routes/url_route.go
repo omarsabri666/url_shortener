@@ -8,14 +8,14 @@ import (
 
 func RegisterURLRoutes(rg *gin.RouterGroup, handler *handler.URLHandler) {
 
-    // Protected routes
-    protected := rg.Group("/")
-    // protected.Use(middleware.AuthMiddleware())
-    {
-        protected.POST("/", handler.CreateURL)
+	// Protected routes
+	protected := rg.Group("/")
+	// protected.Use(middleware.AuthMiddleware())
+	{
+		protected.POST("/", handler.CreateURL)
 		protected.GET("/:short_url", handler.GetURL)
-    }
+	}
 
-    // Public routes producation only
-    // rg.GET("/:short_url", handler.GetURL)
+	// Public routes producation only
+	// rg.GET("/:short_url", handler.GetURL)
 }

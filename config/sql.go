@@ -9,66 +9,41 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
+
 func LoadEnv() {
-    if err := godotenv.Load(); err != nil {
-        log.Println(".env file not found, relying on system environment variables")
-    }
+	if err := godotenv.Load(); err != nil {
+		log.Println(".env file not found, relying on system environment variables")
+	}
 }
+
 // Connect connects to MySQL, creates tables if they don't exist, and returns the *sql.DB
 func Connect() *sql.DB {
 	LoadEnv()
 
-user := os.Getenv("MYSQLUSER")
-password := os.Getenv("MYSQL_ROOT_PASSWORD")
-host := os.Getenv("MYSQLHOST")
-dbname := os.Getenv("MYSQL_DATABASE")
-dbPort := os.Getenv("MYSQLPORT") // <-- read DB_PORT from .env
-log.Printf("DEBUG dbPort : %v" , dbPort)
-log.Printf("DEBUG dbname : %v" , dbname)
-log.Printf("DEBUG host : %v" , host)
-log.Printf("DEBUG user : %v" , user)
-log.Printf("DEBUG password : %v" , password)
+	user := os.Getenv("MYSQLUSER")
+	password := os.Getenv("MYSQL_ROOT_PASSWORD")
+	host := os.Getenv("MYSQLHOST")
+	dbname := os.Getenv("MYSQL_DATABASE")
+	dbPort := os.Getenv("MYSQLPORT")
 
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, dbPort, dbname)
 
-// mysqlUrl := os.Getenv("MYSQL_URL")
+	log.Println(dsn)
+	log.Printf("DEBUG dsn : %v", dsn)
 
-// // Data Source Name with port
-dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, dbPort, dbname)
-// log.Println(dsn)
+	db, err := sql.Open("mysql", dsn)
 
-// mysqlUrl := os.Getenv("MYSQL_URL") // from Railway
+	if err != nil {
+		log.Fatal("Failed to connect to DB:", err)
+	}
 
-// db, err := sql.Open("mysql", mysqlUrl)
-// mysqlUrl := os.Getenv("MYSQL_URL")
-// mysqlUrl = strings.Trim(mysqlUrl, "\"") // remove quotes
-// mysqlUrl = strings.TrimPrefix(mysqlUrl, "mysql://")
+	// Test the connection
+	if err := db.Ping(); err != nil {
+		log.Fatal("Failed to ping DB:", err)
+	}
 
-// parts := strings.SplitN(mysqlUrl, "@", 2)
-// userPass := parts[0]
-// hostDb := parts[1]
-
-// hostParts := strings.SplitN(hostDb, "/", 2)
-// host := hostParts[0]
-// dbName := hostParts[1]
-
-// dsn := userPass + "@tcp(" + host + ")/" + dbName
-log.Println(dsn)
-log.Printf("DEBUG dsn : %v" , dsn)
-
-db, err := sql.Open("mysql", dsn)
-// Open connection
-// db, err := sql.Open("mysql", mysqlUrl)
-if err != nil {
-    log.Fatal("Failed to connect to DB:", err)
-}
-
-    // Test the connection
-    if err := db.Ping(); err != nil {
-        log.Fatal("Failed to ping DB:", err)
-    }
-
-    // Create users table
-    usersTable := `CREATE TABLE IF NOT EXISTS users (
+	// Create users table
+	usersTable := `CREATE TABLE IF NOT EXISTS users (
         id CHAR(36) PRIMARY KEY,
         first_name VARCHAR(255) NOT NULL,
         last_name VARCHAR(255) NOT NULL,
@@ -76,12 +51,12 @@ if err != nil {
         password VARCHAR(255) NOT NULL
     );`
 
-    if _, err := db.Exec(usersTable); err != nil {
-        log.Fatal("Failed to create users table:", err)
-    }
+	if _, err := db.Exec(usersTable); err != nil {
+		log.Fatal("Failed to create users table:", err)
+	}
 
-    // Create urls table
-    urlsTable := `CREATE TABLE IF NOT EXISTS urls (
+	// Create urls table
+	urlsTable := `CREATE TABLE IF NOT EXISTS urls (
     short_url VARCHAR(7) PRIMARY KEY,
     long_url TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -89,44 +64,40 @@ if err != nil {
     user_id CHAR(36) NULL,
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
 );`
- 
-counterTable := `CREATE TABLE IF NOT EXISTS counters (
+
+	counterTable := `CREATE TABLE IF NOT EXISTS counters (
         id BIGINT NOT NULL
 
 )`
-tokenTable := "DROP TABLE IF EXISTS tokens"
+	tokenTable := "DROP TABLE IF EXISTS tokens"
 
+	if _, err := db.Exec(tokenTable); err != nil {
+		log.Fatal("Failed to drop tokens table:", err)
+	}
 
-   if _, err := db.Exec(tokenTable); err != nil {
-        log.Fatal("Failed to drop tokens table:", err)
-    }
- 
+	if _, err := db.Exec(urlsTable); err != nil {
+		log.Fatal("Failed to create urls table:", err)
+	}
 
-    
+	if _, err := db.Exec(counterTable); err != nil {
+		log.Fatal("Failed to create counters table:", err)
+	}
 
-    if _, err := db.Exec(urlsTable); err != nil {
-        log.Fatal("Failed to create urls table:", err)
-    }
-   
-  if _, err := db.Exec(counterTable); err != nil {
-    log.Fatal("Failed to create counters table:", err)
-}
+	// Ensure a row exists
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM counters").Scan(&count)
+	if err != nil {
+		log.Fatal("Failed to check counters table:", err)
+	}
 
-// Ensure a row exists
-var count int
-err = db.QueryRow("SELECT COUNT(*) FROM counters").Scan(&count)
-if err != nil {
-    log.Fatal("Failed to check counters table:", err)
-}
+	if count == 0 {
+		_, err := db.Exec("INSERT INTO counters (id) VALUES (1)")
+		if err != nil {
+			log.Fatal("Failed to insert initial counter row:", err)
+		}
+		log.Println("Inserted initial counter row")
+	}
 
-if count == 0 {
-    _, err := db.Exec("INSERT INTO counters (id) VALUES (1)")
-    if err != nil {
-        log.Fatal("Failed to insert initial counter row:", err)
-    }
-    log.Println("Inserted initial counter row")
-}
-
-    fmt.Println("Connected to DB and tables ensured.")
-    return db
+	fmt.Println("Connected to DB and tables ensured.")
+	return db
 }

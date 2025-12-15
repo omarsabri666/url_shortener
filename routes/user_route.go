@@ -7,14 +7,12 @@ import (
 )
 
 func RegisterUserRoutes(rg *gin.RouterGroup, handler *handler.UserHandler) {
- url:= rg.Group("/auth")
- {
-	 url.POST("/signup",handler.Signup)
-	 url.POST("/signin",handler.Login)
-	 url.POST("/signout",middleware.AuthMiddleware(), handler.Logout)
-	 url.POST(("/refresh"), handler.RefreshToken)
- }
-
-
+	url := rg.Group("/auth")
+	{
+		url.POST("/signup", handler.Signup)
+		url.POST("/signin", handler.Login)
+		url.POST("/signout", middleware.AuthMiddleware(), handler.Logout)
+		url.POST(("/refresh"), handler.RefreshToken)
+	}
 
 }

@@ -5,19 +5,18 @@ import (
 	"github.com/omarsabri666/url_shorter/err"
 )
 
-func HandleError(c *gin.Context, e error){
-	if appErr ,ok := e.(*errs.AppError) ; ok {
-		c.JSON(appErr.Code,gin.H{
-			"success":false , 
+func HandleError(c *gin.Context, e error) {
+	if appErr, ok := e.(*errs.AppError); ok {
+		c.JSON(appErr.Code, gin.H{
+			"success": false,
 			"message": appErr.Message,
-			"details" : appErr.Details,
+			"details": appErr.Details,
 		})
-		return 
+		return
 	}
-	   c.JSON(500, gin.H{
-        "success": false,
-        "message": "internal server error",
-    })
+	c.JSON(500, gin.H{
+		"success": false,
+		"message": "internal server error",
+	})
 
-	
 }

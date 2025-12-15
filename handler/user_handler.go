@@ -15,29 +15,28 @@ type UserHandler struct {
 	service *service.UserService
 }
 
-func NewUserHandler(service *service.UserService ) *UserHandler {
-	return &UserHandler{service: service }
+func NewUserHandler(service *service.UserService) *UserHandler {
+	return &UserHandler{service: service}
 }
 func (u *UserHandler) Signup(c *gin.Context) {
 	var req user.User
 	if c.Request.ContentLength == 0 {
 
-		HandleError(c,errs.BadRequest("empty body"))
+		HandleError(c, errs.BadRequest("empty body"))
 		return
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 
-
-		HandleError(c,errs.BadRequest(err.Error()))
+		HandleError(c, errs.BadRequest(err.Error()))
 		// c.JSON(400, gin.H{"error": err.Error()})
 		return
 
 	}
-err:=	u.service.Signup(req)
+	err := u.service.Signup(req)
 
 	if err != nil {
 		log.Println(err)
-		HandleError(c,err)
+		HandleError(c, err)
 		// c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
@@ -48,76 +47,65 @@ func (u *UserHandler) Login(c *gin.Context) {
 	var req user.UserSignin
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Println(err)
-		HandleError(c,errs.BadRequest(err.Error()))
+		HandleError(c, errs.BadRequest(err.Error()))
 		// c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	UserToken, err := u.service.Login(req,c.Request.Context())
+	UserToken, err := u.service.Login(req, c.Request.Context())
 	if err != nil {
 		log.Println(err)
-		HandleError(c,err)
+		HandleError(c, err)
 		// c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-domaim :=	os.Getenv("DOMAIN")
-	c.SetCookie("refresh_token", UserToken.RefreshToken, 3600 * 24 * 30, "/", domaim, false, true)
-	c.JSON(200, gin.H{"message": "Login successful", "access_token": UserToken.AccessToken,})
+	domaim := os.Getenv("DOMAIN")
+	c.SetCookie("refresh_token", UserToken.RefreshToken, 3600*24*30, "/", domaim, false, true)
+	c.JSON(200, gin.H{"message": "Login successful", "access_token": UserToken.AccessToken})
 
 }
 func (u *UserHandler) Logout(c *gin.Context) {
 	var tStruct repository.TokenStruct
 
-token,err:=	c.Cookie("refresh_token")
+	token, err := c.Cookie("refresh_token")
 	if err != nil {
 		log.Println(err)
-		HandleError(c,errs.Unauthorized(err.Error()))
+		HandleError(c, errs.Unauthorized(err.Error()))
 		return
 	}
-	 userId,_:= c.Get("userID")
+	userId, _ := c.Get("userID")
 
-	tStruct.RefreshToken=token
-	tStruct.UserId=userId.(string)
-err =	u.service.Logout(tStruct,c.Request.Context())
+	tStruct.RefreshToken = token
+	tStruct.UserId = userId.(string)
+	err = u.service.Logout(tStruct, c.Request.Context())
 
 	if err != nil {
 		log.Println(err)
-		HandleError(c,err)
+		HandleError(c, err)
 		// c.JSON(400, gin.H{"error": err.Error()})
 		return
-	}	
-	domaim :=	os.Getenv("DOMAIN")
+	}
+	domaim := os.Getenv("DOMAIN")
 
-	    c.SetCookie("refresh_token", "", -1, "/", domaim, true, true)
+	c.SetCookie("refresh_token", "", -1, "/", domaim, true, true)
 
 	c.JSON(200, gin.H{"message": "Logout successful"})
 
-
-
-
-
 }
 func (h *UserHandler) RefreshToken(c *gin.Context) {
-	refreshToken , err:= c.Cookie("refresh_token")
+	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
 		log.Println(err)
-		HandleError(c,errs.Unauthorized(err.Error()))
-		// c.JSON(400, gin.H{"error": "could not get refresh token"})
+		HandleError(c, errs.Unauthorized(err.Error()))
 		return
 	}
-//  token , err :=	h.token.RefreshToken(refreshToken)
-  token , err :=	h.service.RefreshToken(refreshToken,c.Request.Context())
+	token, err := h.service.RefreshToken(refreshToken, c.Request.Context())
 
 	if err != nil {
 		log.Println(err)
-		HandleError(c,err)
+		HandleError(c, err)
 		return
 	}
 
- 
+	c.JSON(201, gin.H{"token": token.AccessToken})
 
- c.JSON(201,gin.H{"token": token.AccessToken})
-
-
-
-	
 }
