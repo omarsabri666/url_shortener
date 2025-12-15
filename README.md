@@ -6,6 +6,13 @@ This project was built to demonstrate **backend engineering fundamentals**, incl
 
 ---
 
+## 🌍 Base URL
+
+- https://ul.up.railway.app
+  All endpoints below are relative to this base URL.
+
+---
+
 ## ✨ Features
 
 - Shorten long URLs into compact, shareable links
