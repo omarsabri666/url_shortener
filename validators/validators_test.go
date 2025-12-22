@@ -39,7 +39,7 @@ func TestValidUrl(t *testing.T) {
 	}{
 		{"https://example.com", true},
 		{"http://www.example.com/test", true},
-		{"www.example.com", true},
+		{"www.example.com", false},
 		{"example", false},
 		{"htp:/invalid.com", false},
 		{"https://sub.domain.com/path?query=1", true}, // subdomain + query

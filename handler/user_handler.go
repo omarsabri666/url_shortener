@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	errs "github.com/omarsabri666/url_shorter/err"
+	"github.com/omarsabri666/url_shorter/helpers"
 	"github.com/omarsabri666/url_shorter/model/user"
 	"github.com/omarsabri666/url_shorter/repository"
 	service "github.com/omarsabri666/url_shorter/service/user"
@@ -27,8 +28,9 @@ func (u *UserHandler) Signup(c *gin.Context) {
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 
-		HandleError(c, errs.BadRequest(err.Error()))
-		// c.JSON(400, gin.H{"error": err.Error()})
+		errors := helpers.FormatValidationError(err)
+		log.Println(errors)
+		HandleError(c, errs.BadRequest(errors)) // c.JSON(400, gin.H{"error": err.Error()})
 		return
 
 	}
@@ -47,8 +49,9 @@ func (u *UserHandler) Login(c *gin.Context) {
 	var req user.UserSignin
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Println(err)
-		HandleError(c, errs.BadRequest(err.Error()))
-		// c.JSON(400, gin.H{"error": err.Error()})
+		errors := helpers.FormatValidationError(err)
+		log.Println(errors)
+		HandleError(c, errs.BadRequest(errors)) // c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	UserToken, err := u.service.Login(req, c.Request.Context())

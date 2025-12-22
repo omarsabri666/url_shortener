@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	errs "github.com/omarsabri666/url_shorter/err"
+	"github.com/omarsabri666/url_shorter/helpers"
 	"github.com/omarsabri666/url_shorter/model/url"
 	service "github.com/omarsabri666/url_shorter/service/url"
 )
@@ -31,7 +32,9 @@ func (h *URLHandler) CreateURL(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		HandleError(c, errs.BadRequest(err.Error()))
+		errors := helpers.FormatValidationError(err)
+		log.Println(errors)
+		HandleError(c, errs.BadRequest(errors))
 
 		return
 	}
