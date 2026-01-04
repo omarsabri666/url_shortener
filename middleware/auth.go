@@ -1,54 +1,51 @@
 package middleware
 
 import (
+	"context"
 	"errors"
+	"net/http"
 	"os"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	errs "github.com/omarsabri666/url_shorter/err"
-	"github.com/omarsabri666/url_shorter/handler"
+	"github.com/omarsabri666/url_shorter/global"
+	"github.com/omarsabri666/url_shorter/helpers"
+	"github.com/omarsabri666/url_shorter/model/token"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			handler.HandleError(c, errs.Unauthorized("Unauthorized"))
 
-			c.Abort()
+
+
+func AuthMiddlewareHttp(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			helpers.WriteJson(w, 401, token.TokenResponse{Message: "missing token", Success: false})
 			return
 		}
-
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			// c.JSON(401, gin.H{"error": "Invalid Authorization header format"})
-			handler.HandleError(c, errs.Unauthorized("Invalid Authorization header format"))
-			c.Abort()
+			helpers.WriteJson(w, 401, token.TokenResponse{Message: "Invalid Authorization header format", Success: false})
 			return
 		}
-
 		tokenString := parts[1]
 		accessTokenSecret := os.Getenv("ACCESS_TOKEN")
-
 		claims := jwt.MapClaims{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
+		tokenStruct, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 			return []byte(accessTokenSecret), nil
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 
-		if err != nil || !token.Valid {
+		if err != nil || !tokenStruct.Valid {
 
 			if errors.Is(err, jwt.ErrTokenExpired) {
 				// c.JSON(401, gin.H{"error": "Token expired"})
-				handler.HandleError(c, errs.Unauthorized("Token expired"))
-				c.Abort()
+				helpers.WriteJson(w, 401, token.TokenResponse{Message: "Token expired", Success: false})
 				return
 			}
 
 			// c.JSON(401, gin.H{"error": "Invalid token"})
-			errs.Unauthorized("Invalid token")
-			c.Abort()
+			helpers.WriteJson(w, 401, token.TokenResponse{Message: "Invalid token", Success: false})
 			return
 		}
 		println(claims)
@@ -57,13 +54,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		userID, ok := claims["sub"].(string)
 		if !ok || userID == "" {
 			// c.JSON(401, gin.H{"error": "Invalid token claims"})
-			handler.HandleError(c, errs.Unauthorized("Invalid token claims"))
-
-			c.Abort()
+			helpers.WriteJson(w, 401, token.TokenResponse{Message: "Invalid token claims", Success: false})
 			return
 		}
 
-		c.Set("userID", userID)
-		c.Next()
-	}
+		// c.Set("userID", userID)
+		ctx := context.WithValue(r.Context(), global.UserIdKey, userID)
+
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	})
 }

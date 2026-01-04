@@ -46,3 +46,36 @@ func FormatValidationError(err error) string {
 	// fallback
 	return err.Error()
 }
+
+func ValidationErrorsToMap(err error) map[string]string {
+	errors := make(map[string]string)
+
+	// Try to cast to validator.ValidationErrors
+	ve, ok := err.(validator.ValidationErrors)
+	if !ok {
+		// Fallback: NOT a validation error
+		errors["error"] = err.Error()
+		return errors
+	}
+
+	for _, fe := range ve {
+		field := strings.ToLower(fe.Field())
+
+		switch fe.Tag() {
+		case "required":
+			errors[field] = "is required"
+		case "min":
+			errors[field] = "must be at least " + fe.Param() + " characters"
+		case "max":
+			errors[field] = "must be at most " + fe.Param() + " characters"
+		case "alias":
+			errors[field] = "contains invalid characters"
+		case "valid_long_url":
+			errors[field] = "is not a valid URL"
+		default:
+			errors[field] = "is invalid"
+		}
+	}
+
+	return errors
+}

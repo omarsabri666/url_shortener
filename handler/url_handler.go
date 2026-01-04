@@ -1,15 +1,14 @@
 package handler
 
 import (
-	"context"
+	"encoding/json"
 	"log"
-	"time"
+	"net/http"
 
-	"github.com/gin-gonic/gin"
-	errs "github.com/omarsabri666/url_shorter/err"
 	"github.com/omarsabri666/url_shorter/helpers"
 	"github.com/omarsabri666/url_shorter/model/url"
 	service "github.com/omarsabri666/url_shorter/service/url"
+	"github.com/omarsabri666/url_shorter/validators"
 )
 
 type URLHandler struct {
@@ -20,53 +19,73 @@ func NewURLHandler(service *service.URLService) *URLHandler {
 	return &URLHandler{service: service}
 }
 
-func (h *URLHandler) CreateURL(c *gin.Context) {
+func (h *URLHandler) GetURLHttp(w http.ResponseWriter, r *http.Request) {
+	shortUrl := r.PathValue("url")
+	if shortUrl == "" {
+		helpers.WriteJson(w, 400, url.GetUrlResponse{Success: false, Message: "url not provided"})
+		// http.Error(w, "short url is required", http.StatusBadRequest)
+
+	}
+	// 2️⃣ Call service with request context
+	u, err := h.service.GetURL(shortUrl, r.Context())
+	if err != nil {
+		log.Println(err)
+
+		helpers.WriteJson(w, 500, url.GetUrlResponse{Success: false, Message: err.Error()})
+		return
+	}
+
+	// 3️⃣ Redirect to long URL
+	http.Redirect(w, r, u.LongUrl, http.StatusFound)
+}
+
+func (h *URLHandler) CreateURLHttp(w http.ResponseWriter, r *http.Request) {
 	var req url.CreateURLRequest
 	var res url.CreateUrlResponse
 
-	ctx, cancel := context.WithTimeout(c.Request.Context(), time.Second*2)
-	defer cancel()
-	if c.Request.ContentLength == 0 {
-		HandleError(c, errs.BadRequest("empty body"))
+	defer r.Body.Close()
+	if r.ContentLength == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		res.Message = "empty body"
+		res.Success = false
+		json.NewEncoder(w).Encode(res)
+
+		// http.Error(w, "empty body", http.StatusBadRequest)
+		return
+	}
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&req); err != nil {
+		// w.Header().Set("Content-Type", "application/json")
+		// w.WriteHeader(http.StatusBadRequest)
+		// res.Message = "invalid json body"
+		// res.Success = false
+		// json.NewEncoder(w).Encode(res)
+		helpers.WriteJson(w, 400, url.CreateUrlResponse{Message: "invalid json body", Success: false})
+
+		// http.Error(w, "invalid json body", http.StatusBadRequest)
 		return
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		errors := helpers.FormatValidationError(err)
-		log.Println(errors)
-		HandleError(c, errs.BadRequest(errors))
+	// if err := validato.Validate.Struct(req); err != nil {
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
 
+	// }
+	if err := validators.Validate.Struct(req); err != nil {
+		helpers.WriteJson(w, 400, url.CreateUrlResponse{Message: err.Error(), Success: false})
+		// http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	shortUrl, err := h.service.CreateURL(req, ctx)
+	shortUrl, err := h.service.CreateURL(req, r.Context())
 	if err != nil {
 		log.Println(err)
-		HandleError(c, err)
 
+		http.Error(w, "failed to create url", http.StatusInternalServerError)
 		return
 	}
-	res.Success = true
-	res.ShortUrl = shortUrl
-	res.Message = "URL created successfully"
-	c.JSON(201, res)
-
-}
-func (h *URLHandler) GetURL(c *gin.Context) {
-	// var req url.GetUrlRequest
-	var res url.GetUrlResponse
-	shortUrl := c.Param("short_url")
-	if shortUrl == "" {
-		HandleError(c, errs.BadRequest("short url is required"))
-		return
-	}
-
-	u, err := h.service.GetURL(shortUrl, c.Request.Context())
-	if err != nil {
-		log.Println(err)
-		HandleError(c, err)
-		return
-	}
-	res.LongUrl = u.LongUrl
-	c.Redirect(302, res.LongUrl)
+	helpers.WriteJson(w, 201, url.CreateUrlResponse{Data: map[string]string{"url": shortUrl}, Success: true, Message: "Url created successfully"})
 
 }

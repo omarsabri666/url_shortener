@@ -28,9 +28,6 @@ func Connect() *sql.DB {
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, dbPort, dbname)
 
-	log.Println(dsn)
-	log.Printf("DEBUG dsn : %v", dsn)
-
 	db, err := sql.Open("mysql", dsn)
 
 	if err != nil {

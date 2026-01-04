@@ -18,5 +18,4 @@ func HandleError(c *gin.Context, e error) {
 		"success": false,
 		"message": "internal server error",
 	})
-
 }

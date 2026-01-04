@@ -1,20 +1,15 @@
 package middleware
 
 import (
-	"log"
+	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-func RequestIdMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
+func RequestIdMiddlewareHttp(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := uuid.New().String()
-		c.Set("requestID", id)
-		c.Header("X-Request-ID", id)
-		log.Println("Request ID:", id)
-		c.Next()
-
-	}
-
+		r.Header.Set("X-Request-ID", id)
+		next.ServeHTTP(w, r)
+	})
 }

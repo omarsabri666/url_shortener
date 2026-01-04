@@ -1,10 +1,13 @@
 package url
 
 type CreateUrlResponse struct {
-	ShortUrl string `json:"short_url"`
-	Success  bool   `json:"success"`
-	Message  string `json:"message"`
+	Data    map[string]string `json:"data ,omitempty"`
+	Error   interface{}       `json:"error ,omitempty"`
+	Success bool              `json:"success"`
+	Message string            `json:"message"`
 }
 type GetUrlResponse struct {
-	LongUrl string `json:"long_url"`
+	Error   interface{} `json:"error ,omitempty"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
 }
