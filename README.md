@@ -28,7 +28,7 @@ This project was built to demonstrate **backend engineering fundamentals**, incl
 ## 🛠 Tech Stack
 
 - **Language:** Go
-- **HTTP Framework:** Gin
+- **HTTP Framework:** HTTP Package
 - **Database:** MySQL
 - **Cache:** Redis
 - **Deployment:** Railway
@@ -76,7 +76,9 @@ POST /
 
 ```json
 {
-  "short_url": "https://ul.up.railway.app/omar",
+  "data ": {
+    "url": "localhost/d"
+  },
   "success": true,
   "message": "URL created successfully"
 }
@@ -138,7 +140,9 @@ POST /auth/signin
 
 ```json
 {
-  "access_token": "JWT Token",
+  "data ": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Njc0OTA0MjMsImlhdCI6MTc2NzQ4NjgyMywic3ViIjoiMWM3MDY3NWYtZjNmZC00OTdmLWFlZDUtYjBhOTIxOTYwNjUxIiwidHlwZSI6ImFjY2VzcyJ9.GbJexMDkbD8XAnUbpzzo2WciyPsZTB3kJ60DzobnGyQ"
+  },
   "message": "Login successful"
   // set cookie for refresh token
 }
